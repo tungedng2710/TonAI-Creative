@@ -9,18 +9,23 @@ DIFFUSION_CHECKPOINTS = {
         "type": "pretrained",
         "pipeline": "StableDiffusion3Pipeline"
     },
-    # "Realistic (SD 1.5)": {
-    #     "path": "/root/tungn197/genAI/checkpoints/realisticVisionV60B1_v51HyperVAE.safetensors",
-    #     "type": "file",
-    #     "pipeline": "StableDiffusionPipeline"
-    # },
     "Anime (SD 1.5)": {
         "path": "/root/tungn197/genAI/checkpoints/darkSushiMixMix_225D.safetensors",
         "type": "file",
         "pipeline": "StableDiffusionPipeline"
     },
-    "Comic Book (SD 1.5)": {
-        "path": "/media/drive-2t/tungn197/checkpoints/realisticComicBook_v10.safetensors",
+    # "Comic Book (SD 1.5)": {
+    #     "path": "/media/drive-2t/tungn197/checkpoints/realisticComicBook_v10.safetensors",
+    #     "type": "file",
+    #     "pipeline": "StableDiffusionPipeline"
+    # },
+    "Cartoon (SD 1.5)": {
+        "path": "/media/drive-2t/tungn197/checkpoints/animesh_FullV22.safetensors",
+        "type": "file",
+        "pipeline": "StableDiffusionPipeline"
+    },
+    "Realistic (SD 1.5)": {
+        "path": "/root/tungn197/genAI/checkpoints/realisticVisionV60B1_v51HyperVAE.safetensors",
         "type": "file",
         "pipeline": "StableDiffusionPipeline"
     },
@@ -29,22 +34,11 @@ DIFFUSION_CHECKPOINTS = {
         "type": "file",
         "pipeline": "StableDiffusionPipeline"
     },
-    # "ChilloutMix (SD 1.5)": {
-    #     "path": "/media/drive-2t/tungn197/checkpoints/ChilloutMix.safetensors",
-    #     "type": "file",
-    #     "pipeline": "StableDiffusionPipeline",
-    #     "lora": "/root/tungn197/genAI/checkpoints/lora_yangmiV73-000006.safetensors"
-    # },
-    "AniMeshFullV22 (SD 1.5, Cartoon style)": {
-        "path": "/media/drive-2t/tungn197/checkpoints/animesh_FullV22.safetensors",
-        "type": "file",
-        "pipeline": "StableDiffusionPipeline"
-    },
-    "epiCRealism XL (SDXL 1.0, Realistic style)": {
+    "Realistic XL (SDXL 1.0)": {
         "path": "/root/tungn197/genAI/checkpoints/epicrealismXL_v7FinalDestination.safetensors",
         "type": "file",
         "pipeline": "StableDiffusionXLPipeline",
-        "lora": "/root/tungn197/genAI/checkpoints/mod2.safetensors"
+        # "lora": "/root/tungn197/genAI/checkpoints/mod2.safetensors"
     },
     # "Juggernaut X Hyper (SDXL 1.0)": {
     #     "path": "RunDiffusion/Juggernaut-X-Hyper",
@@ -115,3 +109,8 @@ def display_gpu_info():
 tonai_creative_html = read_md_file_to_string("stuffs/html/tonai_creative_info.html")
 tonai_chat_html = read_md_file_to_string("stuffs/html/tonai_chat.html")
 home_header_html = read_md_file_to_string("stuffs/html/homepage.html")
+custom_css = """
+.file-input {
+    height: 200px;
+}
+"""

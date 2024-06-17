@@ -18,10 +18,11 @@ def gen_image(prompt, negative_prompt, width, height, num_steps, mode, seed, gui
     Text2Image_class = globals()[DIFFUSION_CHECKPOINTS[mode]["pipeline"]]
     Text2Image_class.safety_checker=None
     if DIFFUSION_CHECKPOINTS[mode]["type"] == "pretrained":
-        if DIFFUSION_CHECKPOINTS[mode]["pipeline"] == "StableDiffusion3Pipeline": # half precision for fp16
+        if DIFFUSION_CHECKPOINTS[mode]["pipeline"] == "StableDiffusion3Pipeline":
+            # Use half precison for SD3
             pipeline = Text2Image_class.from_pretrained(model_path,
-                                                        text_encoder_3=None,
-                                                        tokenizer_3=None,
+                                                        # text_encoder_3=None,
+                                                        # tokenizer_3=None,
                                                         torch_dtype=torch.float16)
         else:
             pipeline = Text2Image_class.from_pretrained(model_path)
@@ -32,28 +33,39 @@ def gen_image(prompt, negative_prompt, width, height, num_steps, mode, seed, gui
         directory, filename = os.path.split(DIFFUSION_CHECKPOINTS[mode]["lora"])
         pipeline.load_lora_weights(directory, weight_name=filename)
     # pipeline.enable_model_cpu_offload()
-    if DIFFUSION_CHECKPOINTS[mode]["pipeline"] == "StableDiffusion3Pipeline":
-        pipeline.scheduler = FlowMatchEulerDiscreteScheduler.from_config(pipeline.scheduler.config)
-    else:
+    if DIFFUSION_CHECKPOINTS[mode]["pipeline"] != "StableDiffusion3Pipeline":
         pipeline.scheduler = DPMSolverMultistepScheduler.from_config(pipeline.scheduler.config)
 
     image = Image.open("stuffs/serverdown.png")
     for counter, gpu in enumerate(available_gpus):
-        if "SDXL" in mode and gpu['available_memory'] < 15000:
-            continue
+        if ("SDXL" in mode or "SD 3" in mode) and gpu['available_memory'] < 16384:
+            if "SD 3" in mode and counter == (len(available_gpus) - 1):
+                for gpu in available_gpus:
+                    if gpu['available_memory'] > 10000:
+                        # Dropping the T5 Text Encoder during Inference if not enough GPU memory
+                        print("Not enough GPU memory for Stable Diffusion 3, trying to drop T5 Text encoder")
+                        pipeline.text_encoder_3 = None
+                        pipeline.tokenizer_3 = None
+                        break
+            else:
+                torch.cuda.empty_cache()
+                gc.collect()
+                continue
         device = torch.device(f"cuda:{gpu['id']}")
         generator = torch.Generator(device).manual_seed(int(seed))
         try:
             pipeline = pipeline.to(device)
             image = pipeline(prompt=prompt,
-                            negative_prompt=negative_prompt,
-                            width=nearest_divisible_by_8(int(width)),
-                            height=nearest_divisible_by_8(int(height)),
-                            num_inference_steps=int(num_steps),
-                            generator=generator,
-                            guidance_scale=guidance_scale).images[0]
+                             negative_prompt=negative_prompt,
+                             width=nearest_divisible_by_8(int(width)),
+                             height=nearest_divisible_by_8(int(height)),
+                             num_inference_steps=int(num_steps),
+                             generator=generator,
+                             guidance_scale=guidance_scale).images[0]
             break
         except Exception as e:
+            # print(f"Exception: {e}")
+            print("Not enough GPU memory, trying to change device...")
             if counter < (len(available_gpus) - 1):
                 continue
     del pipeline
@@ -81,7 +93,7 @@ with gr.Blocks(title="TonAI Creative", theme=APP_THEME) as interface:
                                 )
                     mode=gr.Dropdown(choices=DIFFUSION_CHECKPOINTS.keys(), label="Mode",
                                      value=list(DIFFUSION_CHECKPOINTS.keys())[0])
-                device_choices = display_gpu_info()
+                # device_choices = display_gpu_info()
                 # device=gr.Dropdown(choices=device_choices, label="Device", value=device_choices[0])
             generate_btn = gr.Button("Generate")
         with gr.Column(scale=2):
@@ -100,7 +112,6 @@ if __name__ == '__main__':
     interface.launch(share=True,
                      root_path="/tonai",
                      server_name=None,
-                     server_port=7860,
                      # auth=AUTH_USERS,
                      allowed_paths=allowed_paths,
                      max_threads=10)
