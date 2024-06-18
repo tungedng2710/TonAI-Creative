@@ -14,13 +14,18 @@ DIFFUSION_CHECKPOINTS = {
         "type": "file",
         "pipeline": "StableDiffusionPipeline"
     },
+    "Anime AnyLoRA (SD 1.5)": {
+        "path": "/root/tungn197/genAI/checkpoints/anyloraCheckpoint_bakedvaeBlessedFp16.safetensors",
+        "type": "file",
+        "pipeline": "StableDiffusionPipeline"
+    },
     # "Comic Book (SD 1.5)": {
     #     "path": "/media/drive-2t/tungn197/checkpoints/realisticComicBook_v10.safetensors",
     #     "type": "file",
     #     "pipeline": "StableDiffusionPipeline"
     # },
     "Cartoon (SD 1.5)": {
-        "path": "/media/drive-2t/tungn197/checkpoints/animesh_FullV22.safetensors",
+        "path": "/root/tungn197/genAI/checkpoints/animesh_FullV22.safetensors",
         "type": "file",
         "pipeline": "StableDiffusionPipeline"
     },
@@ -38,13 +43,7 @@ DIFFUSION_CHECKPOINTS = {
         "path": "/root/tungn197/genAI/checkpoints/epicrealismXL_v7FinalDestination.safetensors",
         "type": "file",
         "pipeline": "StableDiffusionXLPipeline",
-        # "lora": "/root/tungn197/genAI/checkpoints/mod2.safetensors"
-    },
-    # "Juggernaut X Hyper (SDXL 1.0)": {
-    #     "path": "RunDiffusion/Juggernaut-X-Hyper",
-    #     "type": "pretrained",
-    #     "pipeline": "StableDiffusionXLPipeline"
-    # }
+    }
 }
 USERS = {
     "admin":
@@ -110,7 +109,27 @@ tonai_creative_html = read_md_file_to_string("stuffs/html/tonai_creative_info.ht
 tonai_chat_html = read_md_file_to_string("stuffs/html/tonai_chat.html")
 home_header_html = read_md_file_to_string("stuffs/html/homepage.html")
 custom_css = """
-.file-input {
-    height: 200px;
+.file-input .gr-file {
+    width: 150px;
+    height: 30px;
+    padding: 5px;
+    font-size: 14px;
+    background-color: #f5f5f5;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    cursor: pointer;
+}
+.gr-button:hover {
+    background-color: #FFA000; /* Darker amber */
+}
+"""
+js_func = """
+function refresh() {
+    const url = new URL(window.location);
+
+    if (url.searchParams.get('__theme') !== 'light') {
+        url.searchParams.set('__theme', 'light');
+        window.location.href = url.href;
+    }
 }
 """

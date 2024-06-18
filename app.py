@@ -6,9 +6,12 @@ import gradio as gr
 from PIL import Image
 from diffusers import DiffusionPipeline, StableDiffusionPipeline, DPMSolverMultistepScheduler,\
                       StableDiffusionXLPipeline, StableDiffusion3Pipeline, FlowMatchEulerDiscreteScheduler
+from scheduler_mapping import *
 from utils import *
 
-def gen_image(prompt, negative_prompt, width, height, num_steps, mode, seed, guidance_scale):
+def gen_image(prompt, negative_prompt, width, height, 
+              num_steps, mode, seed, guidance_scale, 
+              lora_weight_file):
     """
     Run diffusion model to generate image
     """
@@ -29,12 +32,24 @@ def gen_image(prompt, negative_prompt, width, height, num_steps, mode, seed, gui
     else:
         pipeline = Text2Image_class.from_single_file(model_path)
 
-    if "lora" in DIFFUSION_CHECKPOINTS[mode]:
-        directory, filename = os.path.split(DIFFUSION_CHECKPOINTS[mode]["lora"])
-        pipeline.load_lora_weights(directory, weight_name=filename)
     # pipeline.enable_model_cpu_offload()
     if DIFFUSION_CHECKPOINTS[mode]["pipeline"] != "StableDiffusion3Pipeline":
-        pipeline.scheduler = DPMSolverMultistepScheduler.from_config(pipeline.scheduler.config)
+        # DPM++ 2M SDE Karras
+        pipeline.scheduler = DPMSolverMultistepScheduler.from_config(pipeline.scheduler.config,
+                                                                     use_karras_sigmas=True,
+                                                                    #  algorithm_type="dpmsolver+++",
+                                                                     sde_type="sde-dpmsolver++",
+                                                                     euler_at_final=False,
+                                                                     use_lu_lambdas=False)
+    if lora_weight_file is not None:
+        directory, file_name = os.path.split(lora_weight_file.name)
+        try:
+            print("LoRA weight was found, trying to load...")
+            pipeline.load_lora_weights(directory, weight_name=file_name)
+            print("LoRA weight loaded succesfully")
+        except:
+            print("Cannot load LoRA weight")
+            pass
 
     image = Image.open("stuffs/serverdown.png")
     for counter, gpu in enumerate(available_gpus):
@@ -73,16 +88,19 @@ def gen_image(prompt, negative_prompt, width, height, num_steps, mode, seed, gui
     gc.collect()
     return image
 
-with gr.Blocks(title="TonAI Creative", theme=APP_THEME) as interface:
+with gr.Blocks(title="TonAI Creative", theme=APP_THEME, css=custom_css) as interface:
     gr.HTML(tonai_creative_html)
     with gr.Row():
         with gr.Column(scale=3):
-            prompt = gr.Textbox(label="Prompt", placeholder="Describe the image you want to generate")
             with gr.Row():
-                width = gr.Textbox(label="Image Width", value=1024)
-                height = gr.Textbox(label="Image Height", value=1024)
+                prompt = gr.Textbox(label="Prompt", placeholder="Describe the image you want to generate")
+            with gr.Row():
+                width = gr.Textbox(label="Image Width", value=1024, scale = 4)
+                height = gr.Textbox(label="Image Height", value=1024, scale = 4)
+                generate_btn = gr.Button("Generate", scale = 2)
             with gr.Accordion("Advanced Settings", open=False):
-                negative_prompt = gr.Textbox(label="Negative Prompt", value='', placeholder="Instruct the AI model that it should not include")
+                negative_prompt = gr.Textbox(label="Negative Prompt", value='', 
+                                             placeholder="Instruct the AI model that it should not include")
                 with gr.Row():
                     seed = gr.Textbox(label="RNG Seed", value=0, scale=1)
                     guidance_scale = gr.Textbox(label="CFG Scale", value=7.5, scale=1)
@@ -92,14 +110,15 @@ with gr.Blocks(title="TonAI Creative", theme=APP_THEME) as interface:
                                     label="Inference Steps"
                                 )
                     mode=gr.Dropdown(choices=DIFFUSION_CHECKPOINTS.keys(), label="Mode",
-                                     value=list(DIFFUSION_CHECKPOINTS.keys())[0])
+                                     value=list(DIFFUSION_CHECKPOINTS.keys())[0])                    
+                lora_weight_file = gr.File(label="LoRA safetensors file", elem_classes=["file-input"])
                 # device_choices = display_gpu_info()
                 # device=gr.Dropdown(choices=device_choices, label="Device", value=device_choices[0])
-            generate_btn = gr.Button("Generate")
+            # generate_btn = gr.Button("Generate")
         with gr.Column(scale=2):
             generate_btn.click(
                         fn=gen_image,
-                        inputs=[prompt, negative_prompt, width, height, num_steps, mode, seed, guidance_scale],
+                        inputs=[prompt, negative_prompt, width, height, num_steps, mode, seed, guidance_scale, lora_weight_file],
                         outputs=gr.Image(label="Generated Image", format="png"),
                         concurrency_limit=10
                     )
