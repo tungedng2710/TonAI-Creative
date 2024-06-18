@@ -2,6 +2,7 @@ import gradio as gr
 import GPUtil
 import random
 import string
+import re
 
 DIFFUSION_CHECKPOINTS = {
     "General (SD 3 Medium)": {
@@ -105,9 +106,25 @@ def display_gpu_info():
         info_list.append(f"GPU {info['id']} ({info['name']}, Total: {info['total_memory']} MB, Available: {info['available_memory']} MB)")
     return info_list
 
+def find_lora_scale(tag: str = ''):
+    pattern = r"<lora_scale:(0\.\d+)>"
+    match = re.search(pattern, tag)
+    if match:
+        # Extract the number 0.85
+        number = match.group(1)
+        number = float(number)
+        if 0 <= number <= 1:
+            return number
+        else:
+            return 1
+    else:
+        return 1
+
 tonai_creative_html = read_md_file_to_string("stuffs/html/tonai_creative_info.html")
 tonai_chat_html = read_md_file_to_string("stuffs/html/tonai_chat.html")
 home_header_html = read_md_file_to_string("stuffs/html/homepage.html")
+with open("stuffs/tips.md") as txtfile:
+    tips_content = txtfile.read()
 custom_css = """
 .file-input .gr-file {
     width: 150px;

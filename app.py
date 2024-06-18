@@ -1,4 +1,5 @@
 import os
+import time
 import random
 import torch
 import gc
@@ -15,6 +16,7 @@ def gen_image(prompt, negative_prompt, width, height,
     """
     Run diffusion model to generate image
     """
+    use_lora = False
     available_gpus = get_gpu_info()
     guidance_scale = float(guidance_scale)
     model_path = DIFFUSION_CHECKPOINTS[mode]["path"]
@@ -45,13 +47,16 @@ def gen_image(prompt, negative_prompt, width, height,
         directory, file_name = os.path.split(lora_weight_file.name)
         try:
             print("LoRA weight was found, trying to load...")
-            pipeline.load_lora_weights(directory, weight_name=file_name)
+            pipeline.load_lora_weights(directory, weight_name=file_name, 
+                                       adapter_name=file_name.replace(".safetensors", ''))
             print("LoRA weight loaded succesfully")
-        except:
+            use_lora = True
+        except Exception as e:
+            print(e)
             print("Cannot load LoRA weight")
             pass
-
     image = Image.open("stuffs/serverdown.png")
+    # time.sleep(5) # Delay 5 seconds
     for counter, gpu in enumerate(available_gpus):
         if ("SDXL" in mode or "SD 3" in mode) and gpu['available_memory'] < 16384:
             if "SD 3" in mode and counter == (len(available_gpus) - 1):
@@ -69,17 +74,32 @@ def gen_image(prompt, negative_prompt, width, height,
         device = torch.device(f"cuda:{gpu['id']}")
         generator = torch.Generator(device).manual_seed(int(seed))
         try:
+            # use tag <lora_scale:[number in (0, 1)]>
+            if use_lora:
+                cross_attention_kwargs = {"scale": find_lora_scale(prompt)}
+            else:
+                cross_attention_kwargs = None
             pipeline = pipeline.to(device)
-            image = pipeline(prompt=prompt,
-                             negative_prompt=negative_prompt,
-                             width=nearest_divisible_by_8(int(width)),
-                             height=nearest_divisible_by_8(int(height)),
-                             num_inference_steps=int(num_steps),
-                             generator=generator,
-                             guidance_scale=guidance_scale).images[0]
+            if "SD 3" not in mode:
+                image = pipeline(prompt=prompt,
+                                negative_prompt=negative_prompt,
+                                width=nearest_divisible_by_8(int(width)),
+                                height=nearest_divisible_by_8(int(height)),
+                                num_inference_steps=int(num_steps),
+                                generator=generator,
+                                cross_attention_kwargs=cross_attention_kwargs,
+                                guidance_scale=guidance_scale).images[0]
+            else:
+                image = pipeline(prompt=prompt,
+                                negative_prompt=negative_prompt,
+                                width=nearest_divisible_by_8(int(width)),
+                                height=nearest_divisible_by_8(int(height)),
+                                num_inference_steps=int(num_steps),
+                                generator=generator,
+                                guidance_scale=guidance_scale).images[0]
             break
         except Exception as e:
-            # print(f"Exception: {e}")
+            print(f"Exception: {e}")
             print("Not enough GPU memory, trying to change device...")
             if counter < (len(available_gpus) - 1):
                 continue
@@ -91,7 +111,7 @@ def gen_image(prompt, negative_prompt, width, height,
 with gr.Blocks(title="TonAI Creative", theme=APP_THEME, css=custom_css) as interface:
     gr.HTML(tonai_creative_html)
     with gr.Row():
-        with gr.Column(scale=3):
+        with gr.Column(scale=2):
             with gr.Row():
                 prompt = gr.Textbox(label="Prompt", placeholder="Describe the image you want to generate")
             with gr.Row():
@@ -110,18 +130,21 @@ with gr.Blocks(title="TonAI Creative", theme=APP_THEME, css=custom_css) as inter
                                     label="Inference Steps"
                                 )
                     mode=gr.Dropdown(choices=DIFFUSION_CHECKPOINTS.keys(), label="Mode",
-                                     value=list(DIFFUSION_CHECKPOINTS.keys())[0])                    
+                                     value=list(DIFFUSION_CHECKPOINTS.keys())[0])              
                 lora_weight_file = gr.File(label="LoRA safetensors file", elem_classes=["file-input"])
                 # device_choices = display_gpu_info()
                 # device=gr.Dropdown(choices=device_choices, label="Device", value=device_choices[0])
-            # generate_btn = gr.Button("Generate")
-        with gr.Column(scale=2):
+
+        with gr.Column(scale=1):
             generate_btn.click(
                         fn=gen_image,
                         inputs=[prompt, negative_prompt, width, height, num_steps, mode, seed, guidance_scale, lora_weight_file],
                         outputs=gr.Image(label="Generated Image", format="png"),
                         concurrency_limit=10
                     )
+            with gr.Accordion("Tips for advanced usage", open=False):
+                gr.Markdown(tips_content)
+
         interface.load(lambda: gr.update(value=random.randint(0, 999999)), None, seed)
         # interface.load(lambda: gr.update(choices=display_gpu_info(), value=display_gpu_info()[0]), None, device)
 
