@@ -11,7 +11,7 @@ An application for drawing picture with AI
 
 ## Quick Start
 ### Basic Usage:
-- **Prompt**: Enter the text prompt to generate your desired output. It should be less then 77 words.
+- **Prompt**: Enter the text prompt to generate your desired output. It should be less than 77 words.
 - **Image Width** (and **Height**): Specify the width (and height) of the generated image.
 - For SD 1.5 models, optimized sizes (w x h) are 768x768 (square), 512x864 (portrait), 864x512 (landscape). For SDXL and SD 3 models, optimized sizes (w x h) are 1024x1024 (square), 768x1152 (portrait), 1152x768 (landscape)
 - You can read the [Resolution cheatsheat](https://www.reddit.com/r/StableDiffusion/comments/15c3rf6/sdxl_resolution_cheat_sheet/) to obtain more information.
