@@ -37,7 +37,7 @@ Except Stable Diffusion 3 Medium model, **TonAI Creative** uses `DPM++ 2M SDE Ka
 - **Storage:** 50 GB of free space
 
 ### Recommended Requirements
-- **GPU:** NVIDIA compute-oriented Ampere architecture (A100, A40, A30) or higher. For running Stable Diffusion 3 with full precision, GPUs with 40GB VRAM are required. With GPUs have less than 24GB VRAM, SD3 and SDXl can run with half-precision (Float16).
+- **GPU:** NVIDIA compute-oriented Ampere architecture (A100, A40, A30) or higher. For running Stable Diffusion 3 with full precision, GPUs with 40GB VRAM are required. With GPUs have less than 24GB VRAM, SD3 and SDXL can run with half-precision (Float16).
 - **RAM:** 32 GB
 - **CPU:** Intel i7 or equivalent
 - **Storage:** 50 GB of free space
