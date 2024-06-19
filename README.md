@@ -40,10 +40,7 @@ Except Stable Diffusion 3 Medium model, **TonAI Creative** uses `DPM++ 2M SDE Ka
 - **CPU:** Intel i7 or equivalent
 - **Storage:** 50 GB of free space
 
-Sure, here is the installation guide written in Markdown format:
-
 ### Step 1: Install Anaconda
-
 #### Ubuntu
 1. Download the Anaconda installer script:
     ```bash
@@ -57,8 +54,7 @@ Sure, here is the installation guide written in Markdown format:
     ```bash
     source ~/.bashrc
     ```
-
-#### macOS
+<!-- #### macOS
 1. Download the Anaconda installer:
     - Visit [Anaconda Downloads](https://www.anaconda.com/products/distribution#download-section) and download the macOS installer.
 2. Run the installer:
@@ -68,8 +64,7 @@ Sure, here is the installation guide written in Markdown format:
 3. Follow the prompts and restart your terminal or run:
     ```bash
     source ~/.bash_profile
-    ```
-
+    ``` -->
 #### Windows
 1. Download the Anaconda installer:
     - Visit [Anaconda Downloads](https://www.anaconda.com/products/distribution#download-section) and download the Windows installer.
@@ -96,7 +91,7 @@ Sure, here is the installation guide written in Markdown format:
     pip install -r requirement.txt
     ```
 
-## Usage
+### Run the Web UI
 For running on local machine, from your Terminal (or CMD) run the command
 ```bash
 python app.py
