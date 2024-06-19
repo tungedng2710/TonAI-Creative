@@ -11,37 +11,32 @@ DIFFUSION_CHECKPOINTS = {
         "pipeline": "StableDiffusion3Pipeline"
     },
     "Anime (SD 1.5)": {
-        "path": "/root/tungn197/genAI/checkpoints/darkSushiMixMix_225D.safetensors",
+        "path": "../checkpoints/darkSushiMixMix_225D.safetensors",
         "type": "file",
         "pipeline": "StableDiffusionPipeline"
     },
     "Anime AnyLoRA (SD 1.5)": {
-        "path": "/root/tungn197/genAI/checkpoints/anyloraCheckpoint_bakedvaeBlessedFp16.safetensors",
+        "path": "../checkpoints/anyloraCheckpoint_bakedvaeBlessedFp16.safetensors",
         "type": "file",
         "pipeline": "StableDiffusionPipeline"
     },
-    # "Comic Book (SD 1.5)": {
-    #     "path": "/media/drive-2t/tungn197/checkpoints/realisticComicBook_v10.safetensors",
-    #     "type": "file",
-    #     "pipeline": "StableDiffusionPipeline"
-    # },
     "Cartoon (SD 1.5)": {
-        "path": "/root/tungn197/genAI/checkpoints/animesh_FullV22.safetensors",
+        "path": "../checkpoints/animesh_FullV22.safetensors",
         "type": "file",
         "pipeline": "StableDiffusionPipeline"
     },
     "Realistic (SD 1.5)": {
-        "path": "/root/tungn197/genAI/checkpoints/realisticVisionV60B1_v51HyperVAE.safetensors",
+        "path": "../checkpoints/realisticVisionV60B1_v51HyperVAE.safetensors",
         "type": "file",
         "pipeline": "StableDiffusionPipeline"
     },
     "Realistic Asian (SD 1.5)": {
-        "path": "/root/tungn197/genAI/checkpoints/majicmixRealistic_v7.safetensors",
+        "path": "../checkpoints/majicmixRealistic_v7.safetensors",
         "type": "file",
         "pipeline": "StableDiffusionPipeline"
     },
     "Realistic XL (SDXL 1.0)": {
-        "path": "/root/tungn197/genAI/checkpoints/epicrealismXL_v7FinalDestination.safetensors",
+        "path": "../checkpoints/epicrealismXL_v7FinalDestination.safetensors",
         "type": "file",
         "pipeline": "StableDiffusionXLPipeline",
     }
@@ -121,10 +116,11 @@ def find_lora_scale(tag: str = ''):
         return 1
 
 tonai_creative_html = read_md_file_to_string("stuffs/html/tonai_creative_info.html")
-tonai_chat_html = read_md_file_to_string("stuffs/html/tonai_chat.html")
+# tonai_chat_html = read_md_file_to_string("stuffs/html/tonai_chat.html")
 home_header_html = read_md_file_to_string("stuffs/html/homepage.html")
 with open("stuffs/tips.md") as txtfile:
     tips_content = txtfile.read()
+
 custom_css = """
 .file-input .gr-file {
     width: 150px;
@@ -140,13 +136,13 @@ custom_css = """
     background-color: #FFA000; /* Darker amber */
 }
 """
-js_func = """
-function refresh() {
-    const url = new URL(window.location);
+# js_func = """
+# function refresh() {
+#     const url = new URL(window.location);
 
-    if (url.searchParams.get('__theme') !== 'light') {
-        url.searchParams.set('__theme', 'light');
-        window.location.href = url.href;
-    }
-}
-"""
+#     if (url.searchParams.get('__theme') !== 'light') {
+#         url.searchParams.set('__theme', 'light');
+#         window.location.href = url.href;
+#     }
+# }
+# """
