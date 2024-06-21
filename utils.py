@@ -3,42 +3,44 @@ import GPUtil
 import random
 import string
 import re
+from diffusers import StableDiffusionPipeline, StableDiffusionXLPipeline, StableDiffusion3Pipeline
 
 DIFFUSION_CHECKPOINTS = {
     "General (SD 3 Medium)": {
         "path": "stabilityai/stable-diffusion-3-medium-diffusers",
         "type": "pretrained",
-        "pipeline": "StableDiffusion3Pipeline"
+        "pipeline": StableDiffusion3Pipeline,
+        "half_precision": True,
     },
     "Anime (SD 1.5)": {
         "path": "../checkpoints/darkSushiMixMix_225D.safetensors",
         "type": "file",
-        "pipeline": "StableDiffusionPipeline"
+        "pipeline": StableDiffusionPipeline
     },
     "Anime AnyLoRA (SD 1.5)": {
         "path": "../checkpoints/anyloraCheckpoint_bakedvaeBlessedFp16.safetensors",
         "type": "file",
-        "pipeline": "StableDiffusionPipeline"
+        "pipeline": StableDiffusionPipeline
     },
     "Cartoon (SD 1.5)": {
         "path": "../checkpoints/animesh_FullV22.safetensors",
         "type": "file",
-        "pipeline": "StableDiffusionPipeline"
+        "pipeline": StableDiffusionPipeline
     },
     "Realistic (SD 1.5)": {
         "path": "../checkpoints/realisticVisionV60B1_v51HyperVAE.safetensors",
         "type": "file",
-        "pipeline": "StableDiffusionPipeline"
+        "pipeline": StableDiffusionPipeline
     },
     "Realistic Asian (SD 1.5)": {
         "path": "../checkpoints/majicmixRealistic_v7.safetensors",
         "type": "file",
-        "pipeline": "StableDiffusionPipeline"
+        "pipeline": StableDiffusionPipeline
     },
     "Realistic XL (SDXL 1.0)": {
         "path": "../checkpoints/epicrealismXL_v7FinalDestination.safetensors",
         "type": "file",
-        "pipeline": "StableDiffusionXLPipeline",
+        "pipeline": StableDiffusionXLPipeline,
     }
 }
 USERS = {
@@ -122,19 +124,12 @@ with open("stuffs/tips.md") as txtfile:
     tips_content = txtfile.read()
 
 custom_css = """
-.file-input .gr-file {
-    width: 150px;
-    height: 30px;
-    padding: 5px;
-    font-size: 14px;
-    background-color: #f5f5f5;
-    border: 1px solid #ccc;
-    border-radius: 4px;
-    cursor: pointer;
+<style>
+.gradio input[type="file"][data-label="LoRA safetensors file"] {
+    height: 50px !important;
+    width: 300px !important;
 }
-.gr-button:hover {
-    background-color: #FFA000; /* Darker amber */
-}
+</style>
 """
 # js_func = """
 # function refresh() {
