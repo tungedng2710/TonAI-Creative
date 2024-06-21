@@ -5,9 +5,8 @@ import torch
 import gc
 import gradio as gr
 from PIL import Image
-from diffusers import DiffusionPipeline, StableDiffusionPipeline, DPMSolverMultistepScheduler,\
-                      StableDiffusionXLPipeline, StableDiffusion3Pipeline, FlowMatchEulerDiscreteScheduler
-from scheduler_mapping import *
+from diffusers import DPMSolverMultistepScheduler
+# from scheduler_mapping import schedulers, get_scheduler
 from utils import *
 
 def gen_image(prompt, negative_prompt, width, height, 
@@ -20,14 +19,11 @@ def gen_image(prompt, negative_prompt, width, height,
     available_gpus = get_gpu_info()
     guidance_scale = float(guidance_scale)
     model_path = DIFFUSION_CHECKPOINTS[mode]["path"]
-    Text2Image_class = globals()[DIFFUSION_CHECKPOINTS[mode]["pipeline"]]
+    Text2Image_class = DIFFUSION_CHECKPOINTS[mode]["pipeline"]
     Text2Image_class.safety_checker=None
     if DIFFUSION_CHECKPOINTS[mode]["type"] == "pretrained":
-        if DIFFUSION_CHECKPOINTS[mode]["pipeline"] == "StableDiffusion3Pipeline":
-            # Use half precison for SD3
+        if DIFFUSION_CHECKPOINTS[mode]["half_precision"]:
             pipeline = Text2Image_class.from_pretrained(model_path,
-                                                        # text_encoder_3=None,
-                                                        # tokenizer_3=None,
                                                         torch_dtype=torch.float16)
         else:
             pipeline = Text2Image_class.from_pretrained(model_path)
@@ -35,14 +31,11 @@ def gen_image(prompt, negative_prompt, width, height,
         pipeline = Text2Image_class.from_single_file(model_path)
 
     # pipeline.enable_model_cpu_offload()
-    if DIFFUSION_CHECKPOINTS[mode]["pipeline"] != "StableDiffusion3Pipeline":
+    if DIFFUSION_CHECKPOINTS[mode]["pipeline"] is not StableDiffusion3Pipeline:
         # DPM++ 2M SDE Karras
         pipeline.scheduler = DPMSolverMultistepScheduler.from_config(pipeline.scheduler.config,
                                                                      use_karras_sigmas=True,
-                                                                    #  algorithm_type="dpmsolver+++",
-                                                                     sde_type="sde-dpmsolver++",
-                                                                     euler_at_final=False,
-                                                                     use_lu_lambdas=False)
+                                                                     algorithm_type="sde-dpmsolver++")
     if lora_weight_file is not None:
         directory, file_name = os.path.split(lora_weight_file.name)
         try:
@@ -82,13 +75,13 @@ def gen_image(prompt, negative_prompt, width, height,
             pipeline = pipeline.to(device)
             if "SD 3" not in mode:
                 image = pipeline(prompt=prompt,
-                                negative_prompt=negative_prompt,
-                                width=nearest_divisible_by_8(int(width)),
-                                height=nearest_divisible_by_8(int(height)),
-                                num_inference_steps=int(num_steps),
-                                generator=generator,
-                                cross_attention_kwargs=cross_attention_kwargs,
-                                guidance_scale=guidance_scale).images[0]
+                                 negative_prompt=negative_prompt,
+                                 width=nearest_divisible_by_8(int(width)),
+                                 height=nearest_divisible_by_8(int(height)),
+                                 num_inference_steps=int(num_steps),
+                                 generator=generator,
+                                 cross_attention_kwargs=cross_attention_kwargs,
+                                 guidance_scale=guidance_scale).images[0]
             else:
                 image = pipeline(prompt=prompt,
                                 negative_prompt=negative_prompt,
@@ -115,8 +108,12 @@ with gr.Blocks(title="TonAI Creative", theme=APP_THEME, css=custom_css) as inter
             with gr.Row():
                 prompt = gr.Textbox(label="Prompt", placeholder="Describe the image you want to generate")
             with gr.Row():
-                width = gr.Textbox(label="Image Width", value=1024, scale = 4)
-                height = gr.Textbox(label="Image Height", value=1024, scale = 4)
+                width = gr.Textbox(label="Image Width", value=1024, scale = 2)
+                height = gr.Textbox(label="Image Height", value=1024, scale = 2)
+                mode=gr.Dropdown(choices=DIFFUSION_CHECKPOINTS.keys(), label="Mode",
+                                 value=list(DIFFUSION_CHECKPOINTS.keys())[0],
+                                 interactive=True,
+                                 scale = 4)
                 generate_btn = gr.Button("Generate", scale = 2)
             with gr.Accordion("Advanced Settings", open=False):
                 negative_prompt = gr.Textbox(label="Negative Prompt", value='', 
@@ -124,16 +121,14 @@ with gr.Blocks(title="TonAI Creative", theme=APP_THEME, css=custom_css) as inter
                 with gr.Row():
                     seed = gr.Textbox(label="RNG Seed", value=0, scale=1)
                     guidance_scale = gr.Textbox(label="CFG Scale", value=7.5, scale=1)
-                with gr.Row():
                     num_steps = gr.components.Slider(
                                     minimum=5, maximum=60, value=23, step=1,
-                                    label="Inference Steps"
+                                    label="Inference Steps",
+                                    scale = 3
                                 )
-                    mode=gr.Dropdown(choices=DIFFUSION_CHECKPOINTS.keys(), label="Mode",
-                                     value=list(DIFFUSION_CHECKPOINTS.keys())[0])              
                 lora_weight_file = gr.File(label="LoRA safetensors file", elem_classes=["file-input"])
-                # device_choices = display_gpu_info()
-                # device=gr.Dropdown(choices=device_choices, label="Device", value=device_choices[0])
+            with gr.Accordion("Helps", open=False):
+                gr.Markdown(tips_content)
 
         with gr.Column(scale=1):
             generate_btn.click(
@@ -142,11 +137,7 @@ with gr.Blocks(title="TonAI Creative", theme=APP_THEME, css=custom_css) as inter
                         outputs=gr.Image(label="Generated Image", format="png"),
                         concurrency_limit=10
                     )
-            with gr.Accordion("Tips for advanced usage", open=False):
-                gr.Markdown(tips_content)
-
         interface.load(lambda: gr.update(value=random.randint(0, 999999)), None, seed)
-        # interface.load(lambda: gr.update(choices=display_gpu_info(), value=display_gpu_info()[0]), None, device)
 
 if __name__ == '__main__':
     allowed_paths=["stuffs/tonai_research_logo.png"]
