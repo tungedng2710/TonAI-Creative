@@ -41,6 +41,11 @@ DIFFUSION_CHECKPOINTS = {
         "path": "../checkpoints/epicrealismXL_v7FinalDestination.safetensors",
         "type": "file",
         "pipeline": StableDiffusionXLPipeline,
+    },
+    "DreamShaper8 (SD 1.5)": {
+        "path": "../checkpoints/dreamshaper_8.safetensors",
+        "type": "file",
+        "pipeline": StableDiffusionPipeline
     }
 }
 USERS = {
@@ -58,9 +63,9 @@ def generate_random_string(length=8):
     random_string = ''.join(random.choice(characters) for _ in range(length))
     return random_string
 
-def add_user(username, password):
-    global USERS
-    return
+# def add_user(username, password):
+#     global USERS
+#     return
 
 def read_md_file_to_string(file_path):
     try:
@@ -73,6 +78,9 @@ def read_md_file_to_string(file_path):
         print(f"An error occurred: {e}")
 
 def nearest_divisible_by_8(n):
+    """
+    Auto adjust the number to make it divisible by 8
+    """
     lower_multiple = (n // 8) * 8
     upper_multiple = lower_multiple + 8
     if (n - lower_multiple) < (upper_multiple - n):
@@ -81,6 +89,9 @@ def nearest_divisible_by_8(n):
         return int(upper_multiple)
 
 def get_gpu_info():
+    """
+    Get available GPUs info
+    """
     gpus = GPUtil.getGPUs()
     gpu_info = []
     for gpu in gpus:
@@ -107,7 +118,6 @@ def find_lora_scale(tag: str = ''):
     pattern = r"<lora_scale:(0\.\d+)>"
     match = re.search(pattern, tag)
     if match:
-        # Extract the number 0.85
         number = match.group(1)
         number = float(number)
         if 0 <= number <= 1:
