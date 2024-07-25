@@ -4,6 +4,10 @@ app_file: app.py
 sdk: gradio
 sdk_version: 4.31.2
 ---
+<p align="center">
+  <img src="stuffs/tonai_research_logo.png" alt="Description" style="width: 20%;">
+</p>
+
 # TonAI Creative
 ### An application for drawing picture with AI
 **Web Ui in light mode**
