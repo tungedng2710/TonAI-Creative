@@ -54,9 +54,11 @@ USERS = {
         "password": "admin",
     }
 }
-AUTH_USERS = [(username, USERS[username]["password"]) for username in USERS.keys()]
+AUTH_USERS = [(username, USERS[username]["password"])
+              for username in USERS.keys()]
 APP_THEME = gr.Theme.from_hub("ParityError/Interstellar")
 # APP_THEME = gr.Theme.from_hub("EveryPizza/Cartoony-Gradio-Theme")
+
 
 def generate_random_string(length=8):
     characters = string.ascii_letters + string.digits
@@ -66,6 +68,7 @@ def generate_random_string(length=8):
 # def add_user(username, password):
 #     global USERS
 #     return
+
 
 def read_md_file_to_string(file_path):
     try:
@@ -77,6 +80,7 @@ def read_md_file_to_string(file_path):
     except Exception as e:
         print(f"An error occurred: {e}")
 
+
 def nearest_divisible_by_8(n):
     """
     Auto adjust the number to make it divisible by 8
@@ -87,6 +91,7 @@ def nearest_divisible_by_8(n):
         return int(lower_multiple)
     else:
         return int(upper_multiple)
+
 
 def get_gpu_info():
     """
@@ -107,12 +112,15 @@ def get_gpu_info():
         gpu_info.append(info)
     return gpu_info
 
+
 def display_gpu_info():
     info_list = []
     gpus = get_gpu_info()
     for info in gpus:
-        info_list.append(f"GPU {info['id']} ({info['name']}, Total: {info['total_memory']} MB, Available: {info['available_memory']} MB)")
+        info_list.append(
+            f"GPU {info['id']} ({info['name']}, Total: {info['total_memory']} MB, Available: {info['available_memory']} MB)")
     return info_list
+
 
 def find_lora_scale(tag: str = ''):
     pattern = r"<lora_scale:(0\.\d+)>"
@@ -127,7 +135,9 @@ def find_lora_scale(tag: str = ''):
     else:
         return 1
 
-tonai_creative_html = read_md_file_to_string("stuffs/html/tonai_creative_info.html")
+
+tonai_creative_html = read_md_file_to_string(
+    "stuffs/html/tonai_creative_info.html")
 # tonai_chat_html = read_md_file_to_string("stuffs/html/tonai_chat.html")
 home_header_html = read_md_file_to_string("stuffs/html/homepage.html")
 with open("stuffs/tips.md") as txtfile:

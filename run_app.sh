@@ -1,0 +1,1 @@
+accelerate launch app.py --num_processes=2
