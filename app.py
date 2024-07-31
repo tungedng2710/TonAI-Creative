@@ -94,7 +94,7 @@ def gen_image(prompt, negative_prompt, width, height,
                 "guidance_scale": guidance_scale
             }
             if "SD 3" not in mode:
-                pipeline_configs["cross_attention_kwargs"] = cross_attention_kwargs
+                pipeline_configs = dict(pipeline_configs, **cross_attention_kwargs)
             image = pipeline(**pipeline_configs).images[0]
             break
         except Exception as e:
