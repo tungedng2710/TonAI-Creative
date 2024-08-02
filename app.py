@@ -82,7 +82,7 @@ def gen_image(prompt, negative_prompt, width, height,
             if use_lora:
                 cross_attention_kwargs = {"scale": find_lora_scale(prompt)}
             else:
-                cross_attention_kwargs = None
+                cross_attention_kwargs = {}
             pipeline = pipeline.to(device)
             pipeline_configs = {
                 "prompt": prompt,
