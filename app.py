@@ -30,10 +30,9 @@ def gen_image(prompt, negative_prompt, width, height,
                 model_path, torch_dtype=torch.float16, use_safetensors=True)
         else:
             pipeline = Text2Image_class.from_pretrained(
-                model_path, device_map="balanced", use_safetensors=True)
+                model_path, use_safetensors=True)
     else:
-        pipeline = Text2Image_class.from_single_file(
-            model_path, device_map="balanced")
+        pipeline = Text2Image_class.from_single_file(model_path)
 
     # pipeline.enable_model_cpu_offload()
     if DIFFUSION_CHECKPOINTS[mode]["pipeline"] is not StableDiffusion3Pipeline:
@@ -82,7 +81,7 @@ def gen_image(prompt, negative_prompt, width, height,
             if use_lora:
                 cross_attention_kwargs = {"scale": find_lora_scale(prompt)}
             else:
-                cross_attention_kwargs = None
+                cross_attention_kwargs = {}
             pipeline = pipeline.to(device)
             pipeline_configs = {
                 "prompt": prompt,
