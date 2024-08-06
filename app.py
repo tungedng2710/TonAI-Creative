@@ -1,5 +1,6 @@
 import os
 import time
+import json
 import random
 import torch
 import gc
@@ -10,14 +11,13 @@ from accelerate import PartialState
 # from scheduler_mapping import schedulers, get_scheduler
 from utils import *
 
-
 def gen_image(prompt, negative_prompt, width, height,
               num_steps, mode, seed, guidance_scale,
               lora_weight_file):
     """
     Run diffusion model to generate image
     """
-    distributed_state = PartialState()
+    # distributed_state = PartialState()
     use_lora = False
     available_gpus = get_gpu_info()
     guidance_scale = float(guidance_scale)
@@ -58,8 +58,7 @@ def gen_image(prompt, negative_prompt, width, height,
     image = Image.open("stuffs/serverdown.png")
     # time.sleep(5) # Delay 5 seconds
     for counter, gpu in enumerate(available_gpus):
-        if (
-                "SDXL" in mode or "SD 3" in mode) and gpu['available_memory'] < 16384:
+        if ("SDXL" in mode or "SD 3" in mode) and gpu['available_memory'] < 16384:
             if "SD 3" in mode and counter == (len(available_gpus) - 1):
                 for gpu in available_gpus:
                     if gpu['available_memory'] > 10000:
@@ -82,6 +81,7 @@ def gen_image(prompt, negative_prompt, width, height,
                 cross_attention_kwargs = {"scale": find_lora_scale(prompt)}
             else:
                 cross_attention_kwargs = {}
+            prompt = re.sub(r'<.*?>', '', prompt) # remove lora tag if it exists
             pipeline = pipeline.to(device)
             pipeline_configs = {
                 "prompt": prompt,
@@ -107,6 +107,7 @@ def gen_image(prompt, negative_prompt, width, height,
     return image
 
 
+# -------------------------------------------- Gradio App -------------------------------------------- #
 with gr.Blocks(title="TonAI Creative", theme=APP_THEME, css=custom_css) as interface:
     gr.HTML(tonai_creative_html)
     with gr.Row():

@@ -48,16 +48,18 @@ DIFFUSION_CHECKPOINTS = {
         "pipeline": StableDiffusionPipeline
     }
 }
-USERS = {
-    "admin":
-    {
-        "password": "admin",
-    }
-}
-AUTH_USERS = [(username, USERS[username]["password"])
-              for username in USERS.keys()]
+
+# USERS = {
+#     "admin":
+#     {
+#         "password": "admin",
+#     }
+# }
+
+# AUTH_USERS = [(username, USERS[username]["password"])
+#               for username in USERS.keys()]
+
 APP_THEME = gr.Theme.from_hub("ParityError/Interstellar")
-# APP_THEME = gr.Theme.from_hub("EveryPizza/Cartoony-Gradio-Theme")
 
 
 def generate_random_string(length=8):

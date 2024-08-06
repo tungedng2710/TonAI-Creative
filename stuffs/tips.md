@@ -9,7 +9,7 @@
 - **Negative Prompt**: Text prompts that instruct the AI model that it should not include certain elements in its generated images.
 - **CFG Scale**: A parameter that controls how much the image generation process follows the text prompt. The higher the value, the more the image sticks to a given text input.
 - **Inference Step**: The number of steps the model takes to generate the output.
-- **LoRA safetensor File**: Upload a Low-Rank Adaptation (LoRA) safetensor file to fine-tune the model. You can seek the LoRA weight on the Internet, and add the tag with syntax `<lora:[scale]>` to your prompt. For example, with LoRA file `Mod1_blah.safetensor`, you can indicate this object in prompt by calling `Mod1_blah` (your file name without extension) and tag `<lora:0.66>` (0.66 is the scale of adapter, default value is 1).
+- **LoRA safetensor File**: Upload a Low-Rank Adaptation (LoRA) safetensor file to fine-tune the model. You can seek the LoRA weight on the Internet, and add the tag with syntax `<lora_scale:[scale]>` to your prompt. For example, with LoRA file `Mod1_blah.safetensor`, you can indicate this object in prompt by calling `Mod1_blah` (your file name without extension) and tag `<lora_scale:0.66>` (0.66 is the scale of adapter, default value is 1).
 
 ### More Information:
 Except Stable Diffusion 3 Medium model, **TonAI Creative** uses `DPM++ 2M SDE Karras` Sampler for all pipelines. We value your feedback! Please share your thoughts and suggestions with us at tungnguyen99.tn@gmail.com
