@@ -6,36 +6,36 @@ import re
 from diffusers import StableDiffusionPipeline, StableDiffusionXLPipeline, StableDiffusion3Pipeline
 
 DIFFUSION_CHECKPOINTS = {
-    "General (SD 3 Medium)": {
+    "SD 3 Medium": {
         "path": "stabilityai/stable-diffusion-3-medium-diffusers",
         "type": "pretrained",
         "pipeline": StableDiffusion3Pipeline,
-        "half_precision": True,
     },
     "Anime (SD 1.5)": {
         "path": "../checkpoints/darkSushiMixMix_225D.safetensors",
         "type": "file",
-        "pipeline": StableDiffusionPipeline
+        "pipeline": StableDiffusionPipeline,
     },
     "Anime AnyLoRA (SD 1.5)": {
         "path": "../checkpoints/anyloraCheckpoint_bakedvaeBlessedFp16.safetensors",
         "type": "file",
-        "pipeline": StableDiffusionPipeline
+        "pipeline": StableDiffusionPipeline,
     },
     "Cartoon (SD 1.5)": {
         "path": "../checkpoints/animesh_FullV22.safetensors",
         "type": "file",
-        "pipeline": StableDiffusionPipeline
+        "pipeline": StableDiffusionPipeline,
     },
     "Realistic (SD 1.5)": {
         "path": "../checkpoints/realisticVisionV60B1_v51HyperVAE.safetensors",
         "type": "file",
-        "pipeline": StableDiffusionPipeline
+        "pipeline": StableDiffusionPipeline,
+        "half_precision": False
     },
     "Realistic Asian (SD 1.5)": {
         "path": "../checkpoints/majicmixRealistic_v7.safetensors",
         "type": "file",
-        "pipeline": StableDiffusionPipeline
+        "pipeline": StableDiffusionPipeline,
     },
     "Realistic XL (SDXL 1.0)": {
         "path": "../checkpoints/epicrealismXL_v7FinalDestination.safetensors",
@@ -45,7 +45,7 @@ DIFFUSION_CHECKPOINTS = {
     "DreamShaper8 (SD 1.5)": {
         "path": "../checkpoints/dreamshaper_8.safetensors",
         "type": "file",
-        "pipeline": StableDiffusionPipeline
+        "pipeline": StableDiffusionPipeline,
     }
 }
 
@@ -101,6 +101,7 @@ def get_gpu_info():
     """
     gpus = GPUtil.getGPUs()
     gpu_info = []
+    current_max_memory = {}
     for gpu in gpus:
         info = {
             'id': gpu.id,
@@ -111,8 +112,10 @@ def get_gpu_info():
             'used_memory': gpu.memoryUsed,  # In MB
             'temperature': gpu.temperature  # In Celsius
         }
+        current_max_memory[gpu.id] = f"{int(gpu.memoryFree)-1}GB"
         gpu_info.append(info)
-    return gpu_info
+    
+    return gpu_info, current_max_memory
 
 
 def display_gpu_info():

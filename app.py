@@ -11,31 +11,36 @@ from accelerate import PartialState
 # from scheduler_mapping import schedulers, get_scheduler
 from utils import *
 
+
 def gen_image(prompt, negative_prompt, width, height,
               num_steps, mode, seed, guidance_scale,
-              lora_weight_file):
+              lora_weight_file, fp16=False):
     """
     Run diffusion model to generate image
     """
     # distributed_state = PartialState()
+    model = DIFFUSION_CHECKPOINTS[mode]
     use_lora = False
-    available_gpus = get_gpu_info()
+    available_gpus, current_max_memory = get_gpu_info()
     guidance_scale = float(guidance_scale)
-    model_path = DIFFUSION_CHECKPOINTS[mode]["path"]
-    Text2Image_class = DIFFUSION_CHECKPOINTS[mode]["pipeline"]
+    Text2Image_class = model["pipeline"]
     Text2Image_class.safety_checker = None
-    if DIFFUSION_CHECKPOINTS[mode]["type"] == "pretrained":
-        if DIFFUSION_CHECKPOINTS[mode]["half_precision"]:
-            pipeline = Text2Image_class.from_pretrained(
-                model_path, torch_dtype=torch.float16, use_safetensors=True)
-        else:
-            pipeline = Text2Image_class.from_pretrained(
-                model_path, use_safetensors=True)
+    diffusion_configs = {
+        "use_safetensors": True,
+        "device_map": "balanced",
+        "max_memory": current_max_memory
+    }
+    if fp16:
+        diffusion_configs["torch_dtype"] = torch.float16
+
+    if model["type"] == "pretrained":
+        pipeline = Text2Image_class.from_pretrained(model["path"], **diffusion_configs)
     else:
-        pipeline = Text2Image_class.from_single_file(model_path)
+        diffusion_configs["device_map"] = "auto"
+        pipeline = Text2Image_class.from_single_file(model["path"], **diffusion_configs)
 
     # pipeline.enable_model_cpu_offload()
-    if DIFFUSION_CHECKPOINTS[mode]["pipeline"] is not StableDiffusion3Pipeline:
+    if model["pipeline"] is not StableDiffusion3Pipeline:
         # DPM++ 2M SDE Karras
         pipeline.scheduler = DPMSolverMultistepScheduler.from_config(
             pipeline.scheduler.config,
@@ -56,23 +61,23 @@ def gen_image(prompt, negative_prompt, width, height,
             print("Cannot load LoRA weight")
             pass
     image = Image.open("stuffs/serverdown.png")
-    # time.sleep(5) # Delay 5 seconds
+    time.sleep(5) # Delay 5 seconds
     for counter, gpu in enumerate(available_gpus):
         if ("SDXL" in mode or "SD 3" in mode) and gpu['available_memory'] < 16384:
-            if "SD 3" in mode and counter == (len(available_gpus) - 1):
-                for gpu in available_gpus:
-                    if gpu['available_memory'] > 10000:
-                        # Dropping the T5 Text Encoder during Inference if not
-                        # enough GPU memory
-                        print(
-                            "Not enough GPU memory for Stable Diffusion 3, trying to drop T5 Text encoder")
-                        pipeline.text_encoder_3 = None
-                        pipeline.tokenizer_3 = None
-                        break
-            else:
-                torch.cuda.empty_cache()
-                gc.collect()
-                continue
+            # if "SD 3" in mode and counter == (len(available_gpus) - 1):
+            #     for gpu in available_gpus:
+            #         if gpu['available_memory'] > 10000:
+            #             # Dropping the T5 Text Encoder during Inference if not
+            #             # enough GPU memory
+            #             print(
+            #                 "Not enough GPU memory for Stable Diffusion 3, trying to drop T5 Text encoder")
+            #             pipeline.text_encoder_3 = None
+            #             pipeline.tokenizer_3 = None
+            #             break
+            # else:
+            torch.cuda.empty_cache()
+            gc.collect()
+            continue
         device = torch.device(f"cuda:{gpu['id']}")
         generator = torch.Generator("cuda").manual_seed(int(seed))
         try:
@@ -82,7 +87,7 @@ def gen_image(prompt, negative_prompt, width, height,
             else:
                 cross_attention_kwargs = {}
             prompt = re.sub(r'<.*?>', '', prompt) # remove lora tag if it exists
-            pipeline = pipeline.to(device)
+            # pipeline = pipeline.to(device)
             pipeline_configs = {
                 "prompt": prompt,
                 "negative_prompt": negative_prompt,
@@ -93,12 +98,13 @@ def gen_image(prompt, negative_prompt, width, height,
                 "guidance_scale": guidance_scale
             }
             if "SD 3" not in mode:
-                pipeline_configs = dict(pipeline_configs, **cross_attention_kwargs)
-            image = pipeline(**pipeline_configs).images[0]
+                pipeline = pipeline.to(device)
+                pipeline_configs["cross_attention_kwargs"] = cross_attention_kwargs
+            images = pipeline(**pipeline_configs).images
+            image = images[0]
             break
         except Exception as e:
             print(f"Exception: {e}")
-            print("Not enough GPU memory, trying to change device")
             if counter < (len(available_gpus) - 1):
                 continue
     del pipeline
@@ -126,7 +132,9 @@ with gr.Blocks(title="TonAI Creative", theme=APP_THEME, css=custom_css) as inter
                         DIFFUSION_CHECKPOINTS.keys())[0],
                     interactive=True,
                     scale=4)
-                generate_btn = gr.Button("Generate", scale=2)
+                with gr.Row():
+                    generate_btn = gr.Button("Generate", scale=2)
+                    fgenerate_btn = gr.Button("Fast Generate", scale=2)
             with gr.Accordion("Advanced Settings", open=False):
                 negative_prompt = gr.Textbox(
                     label="Negative Prompt",
@@ -148,22 +156,34 @@ with gr.Blocks(title="TonAI Creative", theme=APP_THEME, css=custom_css) as inter
                 gr.Markdown(tips_content)
 
         with gr.Column(scale=1):
-            generate_btn.click(
-                fn=gen_image,
-                inputs=[
-                    prompt,
-                    negative_prompt,
-                    width,
-                    height,
-                    num_steps,
-                    mode,
-                    seed,
-                    guidance_scale,
-                    lora_weight_file],
-                outputs=gr.Image(
-                    label="Generated Image",
-                    format="png"),
-                concurrency_limit=10)
+            img_output = gr.Image(label="Generated Image", format="png")
+            click_button_behavior = {
+                "fn": gen_image,
+                "outputs": img_output,
+                "concurrency_limit": 10
+            }
+            generate_btn.click(inputs=[prompt,
+                                        negative_prompt,
+                                        width,
+                                        height,
+                                        num_steps,
+                                        mode,
+                                        seed,
+                                        guidance_scale,
+                                        lora_weight_file,
+                                        gr.State(value=False)], 
+                                        **click_button_behavior)
+            fgenerate_btn.click(inputs=[prompt,
+                                        negative_prompt,
+                                        width,
+                                        height,
+                                        num_steps,
+                                        mode,
+                                        seed,
+                                        guidance_scale,
+                                        lora_weight_file,
+                                        gr.State(value=True)], 
+                                        **click_button_behavior)
         interface.load(
             lambda: gr.update(
                 value=random.randint(
