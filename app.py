@@ -118,23 +118,26 @@ with gr.Blocks(title="TonAI Creative", theme=APP_THEME, css=custom_css) as inter
     gr.HTML(tonai_creative_html)
     with gr.Row():
         with gr.Column(scale=2):
-            with gr.Row():
-                prompt = gr.Textbox(
-                    label="Prompt",
-                    placeholder="Describe the image you want to generate")
-            with gr.Row():
-                width = gr.Textbox(label="Image Width", value=1024, scale=2)
-                height = gr.Textbox(label="Image Height", value=1024, scale=2)
-                mode = gr.Dropdown(
-                    choices=DIFFUSION_CHECKPOINTS.keys(),
-                    label="Mode",
-                    value=list(
-                        DIFFUSION_CHECKPOINTS.keys())[0],
-                    interactive=True,
-                    scale=4)
+            with gr.Accordion("Basic Usage", open=True):
                 with gr.Row():
-                    generate_btn = gr.Button("Generate", scale=2)
-                    fgenerate_btn = gr.Button("Fast Generate", scale=2)
+                    prompt = gr.Textbox(
+                        label="Prompt",
+                        placeholder="Describe the image you want to generate")
+                with gr.Row():
+                    width = gr.Textbox(label="Image Width", value=1024, scale=1)
+                    height = gr.Textbox(label="Image Height", value=1024, scale=1)
+                    mode = gr.Dropdown(
+                        choices=DIFFUSION_CHECKPOINTS.keys(),
+                        label="Mode",
+                        value=list(
+                            DIFFUSION_CHECKPOINTS.keys())[0],
+                        interactive=True,
+                        scale=2)
+                    fp16 = gr.Checkbox(label="Fast Inference",
+                                       info="Faster run but decrease picture quality a bit",
+                                       scale=1)
+                generate_btn = gr.Button("Generate", scale=2)
+
             with gr.Accordion("Advanced Settings", open=False):
                 negative_prompt = gr.Textbox(
                     label="Negative Prompt",
@@ -163,27 +166,16 @@ with gr.Blocks(title="TonAI Creative", theme=APP_THEME, css=custom_css) as inter
                 "concurrency_limit": 10
             }
             generate_btn.click(inputs=[prompt,
-                                        negative_prompt,
-                                        width,
-                                        height,
-                                        num_steps,
-                                        mode,
-                                        seed,
-                                        guidance_scale,
-                                        lora_weight_file,
-                                        gr.State(value=False)], 
-                                        **click_button_behavior)
-            fgenerate_btn.click(inputs=[prompt,
-                                        negative_prompt,
-                                        width,
-                                        height,
-                                        num_steps,
-                                        mode,
-                                        seed,
-                                        guidance_scale,
-                                        lora_weight_file,
-                                        gr.State(value=True)], 
-                                        **click_button_behavior)
+                                       negative_prompt,
+                                       width,
+                                       height,
+                                       num_steps,
+                                       mode,
+                                       seed,
+                                       guidance_scale,
+                                       lora_weight_file,
+                                       fp16], 
+                               **click_button_behavior)
         interface.load(
             lambda: gr.update(
                 value=random.randint(
