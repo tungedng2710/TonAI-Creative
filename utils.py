@@ -114,7 +114,7 @@ def get_gpu_info():
         }
         current_max_memory[gpu.id] = f"{int(gpu.memoryFree)-1}GB"
         gpu_info.append(info)
-    
+
     return gpu_info, current_max_memory
 
 
