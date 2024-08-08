@@ -192,7 +192,7 @@ with gr.Blocks(title="TonAI Creative", theme=APP_THEME, css=custom_css) as inter
 if __name__ == '__main__':
     allowed_paths = ["stuffs/tonai_research_logo.png"]
     interface.queue(default_concurrency_limit=10)
-    interface.launch(share=False,
+    interface.launch(share=True,
                      root_path="/tonai",
                      server_name=None,
                      # auth=AUTH_USERS,
