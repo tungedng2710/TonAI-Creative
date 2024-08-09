@@ -3,7 +3,8 @@ import GPUtil
 import random
 import string
 import re
-from diffusers import StableDiffusionPipeline, StableDiffusionXLPipeline, StableDiffusion3Pipeline
+from diffusers import StableDiffusionPipeline, StableDiffusionXLPipeline,\
+                    FluxPipeline, StableDiffusion3Pipeline
 
 DIFFUSION_CHECKPOINTS = {
     "SD 3 Medium": {
@@ -16,16 +17,16 @@ DIFFUSION_CHECKPOINTS = {
         "type": "file",
         "pipeline": StableDiffusionPipeline,
     },
-    "Anime AnyLoRA (SD 1.5)": {
-        "path": "../checkpoints/anyloraCheckpoint_bakedvaeBlessedFp16.safetensors",
-        "type": "file",
-        "pipeline": StableDiffusionPipeline,
-    },
-    "Cartoon (SD 1.5)": {
-        "path": "../checkpoints/animesh_FullV22.safetensors",
-        "type": "file",
-        "pipeline": StableDiffusionPipeline,
-    },
+    # "Anime AnyLoRA (SD 1.5)": {
+    #     "path": "../checkpoints/anyloraCheckpoint_bakedvaeBlessedFp16.safetensors",
+    #     "type": "file",
+    #     "pipeline": StableDiffusionPipeline,
+    # },
+    # "Cartoon (SD 1.5)": {
+    #     "path": "../checkpoints/animesh_FullV22.safetensors",
+    #     "type": "file",
+    #     "pipeline": StableDiffusionPipeline,
+    # },
     "Realistic (SD 1.5)": {
         "path": "../checkpoints/realisticVisionV60B1_v51HyperVAE.safetensors",
         "type": "file",
@@ -46,6 +47,16 @@ DIFFUSION_CHECKPOINTS = {
         "path": "../checkpoints/dreamshaper_8.safetensors",
         "type": "file",
         "pipeline": StableDiffusionPipeline,
+    },
+    "FLUX.1 [schnell]": {
+        "path": "black-forest-labs/FLUX.1-schnell",
+        "type": "pretrained",
+        "pipeline": FluxPipeline,
+    },
+    "FLUX.1 [dev]": {
+        "path": "black-forest-labs/FLUX.1-dev",
+        "type": "pretrained",
+        "pipeline": FluxPipeline,
     }
 }
 
@@ -112,7 +123,7 @@ def get_gpu_info():
             'used_memory': gpu.memoryUsed,  # In MB
             'temperature': gpu.temperature  # In Celsius
         }
-        current_max_memory[gpu.id] = f"{int(gpu.memoryFree)-1}GB"
+        current_max_memory[gpu.id] = f"{int(gpu.memoryFree)/1024-1}GB"
         gpu_info.append(info)
 
     return gpu_info, current_max_memory

@@ -18,7 +18,7 @@ def gen_image(prompt, negative_prompt, width, height,
     Run diffusion model to generate image
     """
     # distributed_state = PartialState()
-    num_images = 4
+    num_images = 4 if "FLUX" not in mode else 1
     model = DIFFUSION_CHECKPOINTS[mode]
     use_lora = False
     available_gpus, current_max_memory = get_gpu_info()
@@ -30,7 +30,7 @@ def gen_image(prompt, negative_prompt, width, height,
         "device_map": "balanced",
         "max_memory": current_max_memory
     }
-    if fp16:
+    if fp16 or "FLUX" in mode:
         diffusion_configs["torch_dtype"] = torch.float16
 
     if model["type"] == "pretrained":
@@ -41,7 +41,7 @@ def gen_image(prompt, negative_prompt, width, height,
         pipeline = Text2Image_class.from_single_file(
             model["path"], **diffusion_configs)
 
-    if model["pipeline"] is not StableDiffusion3Pipeline:
+    if "SD 3" not in mode and "FLUX" not in mode:
         # DPM++ 2M SDE Karras
         pipeline.scheduler = DPMSolverMultistepScheduler.from_config(
             pipeline.scheduler.config,
@@ -98,9 +98,12 @@ def gen_image(prompt, negative_prompt, width, height,
                 "generator": generator,
                 "guidance_scale": guidance_scale
             }
-            if "SD 3" not in mode:
+            if "SD 3" not in mode and "FLUX" not in mode:
                 pipeline = pipeline.to(device)
                 pipeline_configs["cross_attention_kwargs"] = cross_attention_kwargs
+            if "FLUX" in mode:
+                del pipeline_configs["negative_prompt"]
+                pipeline_configs["max_sequence_length"] = 256
             images = pipeline(**pipeline_configs).images
             break
         except Exception as e:
@@ -124,10 +127,16 @@ with gr.Blocks(title="TonAI Creative", theme=APP_THEME, css=custom_css) as inter
                         label="Prompt",
                         placeholder="Describe the image you want to generate")
                 with gr.Row():
-                    width = gr.Textbox(
-                        label="Image Width", value=1024, scale=1)
-                    height = gr.Textbox(
-                        label="Image Height", value=1024, scale=1)
+                    width = gr.components.Slider(
+                        minimum=256, maximum=2048, value=768, step=8,
+                        label="Width",
+                        scale=1
+                    )
+                    height = gr.components.Slider(
+                        minimum=256, maximum=2048, value=768, step=8,
+                        label="Height",
+                        scale=1
+                    )
                     mode = gr.Dropdown(
                         choices=DIFFUSION_CHECKPOINTS.keys(),
                         label="Mode",
@@ -138,6 +147,7 @@ with gr.Blocks(title="TonAI Creative", theme=APP_THEME, css=custom_css) as inter
                     fp16 = gr.Checkbox(
                         label="Fast Inference",
                         info="Faster run but decrease picture quality a bit",
+                        value=True,
                         scale=1)
                 generate_btn = gr.Button("Generate", scale=2)
 
@@ -151,7 +161,7 @@ with gr.Blocks(title="TonAI Creative", theme=APP_THEME, css=custom_css) as inter
                     guidance_scale = gr.Textbox(
                         label="CFG Scale", value=7.5, scale=1)
                     num_steps = gr.components.Slider(
-                        minimum=5, maximum=60, value=23, step=1,
+                        minimum=3, maximum=60, value=23, step=1,
                         label="Inference Steps",
                         scale=3
                     )
@@ -163,11 +173,12 @@ with gr.Blocks(title="TonAI Creative", theme=APP_THEME, css=custom_css) as inter
 
         with gr.Column(scale=3):
             gallery = gr.Gallery(
-                label="Generated images",
+                label="Generated Images",
+                format="png",
                 elem_id="gallery",
-                columns=2,
-                rows=2,
-                object_fit="fill")
+                columns=2, rows=2,
+                preview=True,
+                object_fit="contain")
             click_button_behavior = {
                 "fn": gen_image,
                 "outputs": gallery,
