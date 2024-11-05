@@ -49,10 +49,10 @@ TEXT_TO_IMAGE_DICTIONARY = {
     #     "path": "Lykon/dreamshaper-8",
     #     "pipeline": StableDiffusionPipeline,
     # },
-    # "Anime (SD 1.5)": {
-    #     "path": "../checkpoints/darkSushiMixMix_225D.safetensors",
-    #     "pipeline": StableDiffusionPipeline,
-    # }
+    "Anime (SD 1.5)": {
+        "path": "../checkpoints/darkSushiMixMix_225D.safetensors",
+        "pipeline": StableDiffusionPipeline,
+    }
 }
 
 
