@@ -1,0 +1,9 @@
+torch
+transformers
+diffuser==0.0.1
+-e git+https://github.com/huggingface/diffusers@65e30907b5df1338ae65a20b78866c87e061c952#egg=diffusers
+sentencepiece
+ollama
+GPUtil
+accelerate
+pydantic
