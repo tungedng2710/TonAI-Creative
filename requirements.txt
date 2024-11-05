@@ -7,3 +7,4 @@ ollama
 GPUtil
 accelerate
 pydantic
+websocket

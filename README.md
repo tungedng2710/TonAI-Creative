@@ -4,7 +4,7 @@ app_file: app.py
 sdk: gradio
 colorFrom: red
 colorTo: green
-sdk_version: 4.44.0
+sdk_version: 5.0.2
 ---
 <p align="center">
   <img src="stuffs/splash.png" alt="Description" style="width: 20%;">
