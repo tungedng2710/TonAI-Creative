@@ -20,7 +20,7 @@ def queue_prompt(prompt):
 def get_image(filename, subfolder, folder_type):
     data = {"filename": filename, "subfolder": subfolder, "type": folder_type}
     url_values = urllib.parse.urlencode(data)
-    with urllib.request.urlopen("http://{}/view?{}".format(server_address, url_values)) as response:
+    with urllib.request.urlopen("https://{}/view?{}".format(server_address, url_values)) as response:
         return response.read()
 
 def get_history(prompt_id):
